@@ -6,8 +6,6 @@
 #include <EEPROM.h>
 #include "config.h"
 
-
-
 const uint8_t randomSeedPin = A0;
 const uint32_t randomSeedCorrection = 127773UL;
 CRGB zonesCol[zonesQuantity];
@@ -26,21 +24,17 @@ typedef struct {
 
 comet_t cometsSettings[cometCount];
 
-uint8_t level1_chaos = 0;
-
 uint8_t cometCounter[cometCount]; //
 
 OneButton btn_mode = OneButton(BTN_PIN_MODE, true, true);
 OneButton btn_saw = OneButton(BTN_PIN_SAW, true, true);
 
-CRGB szvColor;
-CRGB leds[NUM_LEDS];
+//CRGB leds[NUM_LEDS];
 CRGB leds_temp[NUM_LEDS];
 CRGB leds_comet[NUM_COMET_LEDS];
 uint8_t leds_brightness[NUM_LEDS];
 uint8_t sawValues[NUM_LEDS];
 uint8_t sin5[NUM_LEDS];
-uint8_t leds_chaos[NUM_LEDS];
 
 uint8_t paletteIndex = 0;
 
@@ -109,13 +103,6 @@ const uint8_t sin256[256] PROGMEM ={127,131,134,137,140,143,146,149,152,155,158,
 
 int recievedTemp = 0; 
 
-uint8_t heartHue = 0; //переменные сердцебиения
-uint8_t deltaHue = 5;
-uint8_t heartBrightness = 0; //переменные сердцебиения
-uint8_t deltaBrightness = 12;
-uint8_t heartX = 0;
-
-
 #define arraySize(_array) ( sizeof(_array) / sizeof(*_array) )
 
 CRGBPalette16 myPal = space_gp;
@@ -126,16 +113,6 @@ void copyZonesToPixels() {
 			leds_temp[zonepixels[zoneId].pixels[pixelN]] = zonesCol[zoneId];    
 }
 
-void shuffleArray(uint8_t * array, int size){
-	int last = 0;
-	int temp = array[last];
-	for (int i=0; i<size; i++){
-		int index = random(size);
-		array[last] = array[index];
-		last = index;
-	}
-	array[last] = temp;
-}
 
 void setup() {  
 	pinMode(BIT0,INPUT);
@@ -151,22 +128,21 @@ void setup() {
  
 	pinMode(ACK,OUTPUT); 
 
-	FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, NUM_LEDS);
-	FastLED.addLeds<WS2812, DATA_PIN2, GRB>(leds, NUM_LEDS);
-	FastLED.addLeds<WS2812, DATA_PIN3, GRB>(leds, NUM_LEDS);
-	FastLED.addLeds<WS2812, DATA_PIN4, GRB>(leds, NUM_LEDS);
-	FastLED.addLeds<WS2812, DATA_PIN5, GRB>(leds, NUM_LEDS);  
+	FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds_temp, NUM_LEDS);
+	FastLED.addLeds<WS2812, DATA_PIN2, GRB>(leds_temp, NUM_LEDS);
+	FastLED.addLeds<WS2812, DATA_PIN3, GRB>(leds_temp, NUM_LEDS);
+	FastLED.addLeds<WS2812, DATA_PIN4, GRB>(leds_temp, NUM_LEDS);
+	FastLED.addLeds<WS2812, DATA_PIN5, GRB>(leds_temp, NUM_LEDS);  
 	FastLED.addLeds<WS2812, DATA_COMET_PIN, GRB>(leds_comet, NUM_COMET_LEDS);
     
 	Serial.begin(115200);
 	for(uint8_t i = 0; i < NUM_LEDS; i++) {
 		sawValues[i] = random8();
 	    sin5[i] = random8(0,5); 
-		leds_brightness[i] = 150;
-		leds_chaos[i]=i;    
+		leds_brightness[i] = 150;  
 	}    
 	
-	shuffleArray(leds_chaos, NUM_LEDS);
+
 	
 	btn_mode.attachClick(nextMode);
 	btn_mode.attachLongPressStart(onOffMode);
@@ -401,50 +377,9 @@ void loop() {
 			EVERY_N_MILLISECONDS(level1_ms){
 				paletteIndex++;
 			}
-		} 
-		if( level1 == 17)  { //режим сердцебиения
-			for(uint8_t pixelNo = 0; pixelNo < NUM_LEDS; pixelNo++) {
-				leds_temp[pixelNo] = CHSV(heartHue,255, heartBrightness);
-			}  
-			EVERY_N_MILLISECONDS(level1_ms * 25){               
-				heartHue += deltaHue;
-			}
-			EVERY_N_MILLISECONDS(level1_ms){   
-				if(heartX < 5) {            
-					heartBrightness += deltaBrightness;
-				} else {
-					if((heartX < 10)||((heartX <20) && (heartX >= 15))) {
-						heartBrightness += deltaBrightness * 2;          
-					} else {
-						if((heartX < 15) || ((heartX < 25) && (heartX >= 20))) {
-							heartBrightness -= deltaBrightness * 2;    
-						} else {
-							heartBrightness -= deltaBrightness ;    
-						}
-					}
-				}
-				if(heartX < 30)
-					heartX++;
-				else {
-					heartX = 0;   
-					heartBrightness = 0;
-				}		
-			}    
-		} else {
-			if(level1 == 18) { //chaos rainbow
-        if(!level1_chaos)
-          shuffleArray(leds_chaos, NUM_LEDS);
-        level1_chaos = 1;        
-				myPal = Rainbow_gp1;
-				fill_palette(leds_temp, NUM_LEDS, paletteIndex, 255 / NUM_LEDS , myPal, 255, LINEARBLEND);
-				EVERY_N_MILLISECONDS(level1_ms){
-					paletteIndex++;
-				}
-			} else {
-        level1_chaos = 0;			
-				copyZonesToPixels(); 
-			}
-		}
+		} 	
+		copyZonesToPixels(); 					
+		
 	}
   
 	if(level2) {  //УРОВЕНЬ2
@@ -528,21 +463,18 @@ void loop() {
 		
 	for(uint8_t i = 0; i < NUM_LEDS; i++) {  
     uint8_t j = i;
-		if(level1 == 18) {
-			i = leds_chaos[i];
-		}
 		leds_temp[i].nscale8(leds_brightness[i]);//subtractFromRGB(leds_brightness[i]);      
 		leds_temp[i].r=scale8(leds_temp[i].r, defaultBrightnessR);
 		leds_temp[i].g=scale8(leds_temp[i].g, defaultBrightnessG);
 		leds_temp[i].b=scale8(leds_temp[i].b, defaultBrightnessB);               
-		leds[j] = CRGB(leds_temp[i]);       
+		//leds[j] = CRGB(leds_temp[i]);       
     i = j;
 	}   
 
 	#if defined (SETTABLE)
 		if(level1) 
 			for(uint8_t i=0; i< corrPx; i++)
-				leds[setTable[i][0]].subtractFromRGB(setTable[i][1]);
+			//	leds[setTable[i][0]].subtractFromRGB(setTable[i][1]);
 	#endif 
 
   //зажигаем созвездия
@@ -797,6 +729,59 @@ void loop() {
 					}      
 				}
 			}      
+			if((cometCount > 4)&&(launch3_enable)) {//5я
+				if(cometOver[4] == 1) {
+					EVERY_N_SECONDS(cometsSettings[4].cometLaunchTimer) {
+						if(cometState[4] == 0) {
+							cometState[4] = 1;          
+							cometOver[4] = 0;
+						} else {  
+							randomSeed(randomSeedCorrection * analogRead(randomSeedPin));
+							cometState[4] = 0;
+							cometCounter[4] = 0;
+							cometsSettings[4].cometStepTimer = random(cometStepTimerMin, cometStepTimerMax);
+							cometsSettings[4].cometTail = random(cometTailMin, cometTailMax);
+							cometsSettings[4].cometBrightness = random(cometBrightessMin, cometBrightessMax);
+							cometsSettings[4].cometReverse = random(0,255)%2;           
+							cometsSettings[4].cometColor = colorTable[random(arraySize(colorTable))];   
+							cometsSettings[4].cometLaunchTimer = random(cometLaunchTimerMin, cometLaunchTimerMax);
+						}      
+						for(uint8_t i = 0; i < comets[4].qty; i++) {
+							leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+						}        
+					}
+				}  
+				if(cometState[4]){
+					EVERY_N_MILLISECONDS(cometsSettings[4].cometStepTimer) { 
+						for(uint8_t i = 0; i < comets[4].qty; i++) {
+							leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+						}           
+						if(cometCounter[4] < comets[4].qty + cometsSettings[4].cometTail) {
+							if(cometsSettings[4].cometReverse) {
+								for(int8_t i = comets[4].qty - cometCounter[4] - 1;  ((i < comets[4].qty) && (i <= comets[4].qty - cometCounter[4] - 1 + cometsSettings[4].cometTail)); i++) {        
+									if(i >= 0) {
+										leds_comet[comets[4].pixels[i]] = cometsSettings[4].cometColor;
+										leds_comet[comets[4].pixels[i]].nscale8(cometsSettings[4].cometBrightness/(i - (comets[4].qty - cometCounter[4] - 1) + 1));
+									}
+								}      
+							}else{
+								for(int8_t i = cometCounter[4];  ((i >= 0)&&(cometCounter[4] - i <= cometsSettings[4].cometTail)); i--) {   
+									if(i<comets[4].qty) {     
+										leds_comet[comets[4].pixels[i]] = cometsSettings[4].cometColor;                  
+										leds_comet[comets[4].pixels[i]].nscale8(cometsSettings[4].cometBrightness/(cometCounter[4] - i + 1));
+									}
+								}          
+							}
+							cometCounter[4]++;
+						}else{
+							for(uint8_t i = 0; i < comets[4].qty; i++) {
+								leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+							}      
+							cometOver[4] = 1;       
+						}            
+					}      
+				}
+			}    			
 		}
 	}else{
 		if(cometCount > 0) {
