@@ -6,14 +6,11 @@
 #include <EEPROM.h>
 #include "config.h"
 
-
-
 const uint8_t randomSeedPin = A0;
 const uint32_t randomSeedCorrection = 127773UL;
 CRGB zonesCol[zonesQuantity];
 
 uint8_t level1_prev = 0;
-uint8_t changedState = 0;
 
 typedef struct {
 	uint8_t cometStepTimer;// = 50;
@@ -57,8 +54,6 @@ uint8_t level2_1_min = 0;
 
 uint8_t level2_2_max = 0;
 uint8_t level2_2_min = 0;
-
-uint8_t level2_ms = 0;
 
 uint8_t switchOff = 0; //для выключения комет и созвездий
 
@@ -205,7 +200,6 @@ void onOffMode(){
 		level1_prev = level1;  
 		level1 = 0;
 		switchOff = 1;
-		changedState = 1;
 		if(level1_prev)
 			EEPROM.update(2, level1_prev);  
 	}else{    
@@ -290,7 +284,6 @@ void loop() {
 					nextSaw();
 					break; 
 				case 6915: //OFF
-					changedState = 1;
 					level1_prev = level1;  
 					level1 = 0;
 					switchOff = 1;    
