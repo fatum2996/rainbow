@@ -581,6 +581,11 @@ void loop() {
 				launch3_enable = 1; 
 			}
 		}
+    if(launch4_enable == 0){
+      EVERY_N_SECONDS(shift4) {
+        launch4_enable = 1; 
+      }
+    }   
     
 		if(cometCount > 0) {
 			if(cometOver[0] == 1) {
@@ -797,6 +802,59 @@ void loop() {
 					}      
 				}
 			}      
+      if((cometCount > 4)&&(launch4_enable)) {//5я
+        if(cometOver[4] == 1) {
+          EVERY_N_SECONDS(cometsSettings[4].cometLaunchTimer) {
+            if(cometState[4] == 0) {
+              cometState[4] = 1;          
+              cometOver[4] = 0;
+            } else {  
+              randomSeed(randomSeedCorrection * analogRead(randomSeedPin));
+              cometState[4] = 0;
+              cometCounter[4] = 0;
+              cometsSettings[4].cometStepTimer = random(cometStepTimerMin, cometStepTimerMax);
+              cometsSettings[4].cometTail = random(cometTailMin, cometTailMax);
+              cometsSettings[4].cometBrightness = random(cometBrightessMin, cometBrightessMax);
+              cometsSettings[4].cometReverse = random(0,255)%2;           
+              cometsSettings[4].cometColor = colorTable[random(arraySize(colorTable))];   
+              cometsSettings[4].cometLaunchTimer = random(cometLaunchTimerMin, cometLaunchTimerMax);
+            }      
+            for(uint8_t i = 0; i < comets[4].qty; i++) {
+              leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+            }        
+          }
+        }  
+        if(cometState[4]){
+          EVERY_N_MILLISECONDS(cometsSettings[4].cometStepTimer) { 
+            for(uint8_t i = 0; i < comets[4].qty; i++) {
+              leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+            }           
+            if(cometCounter[4] < comets[4].qty + cometsSettings[4].cometTail) {
+              if(cometsSettings[4].cometReverse) {
+                for(int8_t i = comets[4].qty - cometCounter[4] - 1;  ((i < comets[4].qty) && (i <= comets[4].qty - cometCounter[4] - 1 + cometsSettings[4].cometTail)); i++) {        
+                  if(i >= 0) {
+                    leds_comet[comets[4].pixels[i]] = cometsSettings[4].cometColor;
+                    leds_comet[comets[4].pixels[i]].nscale8(cometsSettings[4].cometBrightness/(i - (comets[4].qty - cometCounter[4] - 1) + 1));
+                  }
+                }      
+              }else{
+                for(int8_t i = cometCounter[4];  ((i >= 0)&&(cometCounter[4] - i <= cometsSettings[4].cometTail)); i--) {   
+                  if(i<comets[4].qty) {     
+                    leds_comet[comets[4].pixels[i]] = cometsSettings[4].cometColor;                  
+                    leds_comet[comets[4].pixels[i]].nscale8(cometsSettings[4].cometBrightness/(cometCounter[4] - i + 1));
+                  }
+                }          
+              }
+              cometCounter[4]++;
+            }else{
+              for(uint8_t i = 0; i < comets[4].qty; i++) {
+                leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+              }      
+              cometOver[4] = 1;       
+            }            
+          }      
+        }
+      }         
 		}
 	}else{
 		if(cometCount > 0) {
@@ -810,15 +868,20 @@ void loop() {
 			}            
 		}
 		if(cometCount > 2) {
-			for(uint8_t i = 0; i < comets[0].qty; i++) {
+			for(uint8_t i = 0; i < comets[2].qty; i++) {
 				leds_comet[comets[2].pixels[i]] = CRGB::Black;   
 			}      
 		}
 		if(cometCount > 3) {
-			for(uint8_t i = 0; i < comets[0].qty; i++) {
+			for(uint8_t i = 0; i < comets[3].qty; i++) {
 				leds_comet[comets[3].pixels[i]] = CRGB::Black;   
 			}
-		}           
+		}   
+    if(cometCount > 4) {
+      for(uint8_t i = 0; i < comets[4].qty; i++) {
+        leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+      }
+    }              
 	}
 	FastLED.show();  
 	btn_mode.tick();
