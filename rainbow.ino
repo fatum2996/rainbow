@@ -513,6 +513,11 @@ void loop() {
 				launch3_enable = 1; 
 			}
 		}
+    if(launch4_enable == 0){
+      EVERY_N_SECONDS(shift4) {
+        launch4_enable = 1; 
+      }
+    }    
     
 		if(cometCount > 0) {
 			if(cometOver[0] == 1) {
@@ -729,7 +734,7 @@ void loop() {
 					}      
 				}
 			}      
-			if((cometCount > 4)&&(launch3_enable)) {//5я
+			if((cometCount > 4)&&(launch4_enable)) {//5я
 				if(cometOver[4] == 1) {
 					EVERY_N_SECONDS(cometsSettings[4].cometLaunchTimer) {
 						if(cometState[4] == 0) {
@@ -795,15 +800,20 @@ void loop() {
 			}            
 		}
 		if(cometCount > 2) {
-			for(uint8_t i = 0; i < comets[0].qty; i++) {
+			for(uint8_t i = 0; i < comets[2].qty; i++) {
 				leds_comet[comets[2].pixels[i]] = CRGB::Black;   
 			}      
 		}
 		if(cometCount > 3) {
-			for(uint8_t i = 0; i < comets[0].qty; i++) {
+			for(uint8_t i = 0; i < comets[3].qty; i++) {
 				leds_comet[comets[3].pixels[i]] = CRGB::Black;   
 			}
-		}           
+		}       
+    if(cometCount > 4) {
+      for(uint8_t i = 0; i < comets[4].qty; i++) {
+        leds_comet[comets[4].pixels[i]] = CRGB::Black;   
+      }
+    }         
 	}
 	FastLED.show();  
 	btn_mode.tick();
