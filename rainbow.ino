@@ -152,8 +152,7 @@ void setup() {
 	FastLED.addLeds<WS2812, DATA_PIN4, GRB>(leds, NUM_LEDS);
 	FastLED.addLeds<WS2812, DATA_PIN5, GRB>(leds, NUM_LEDS);  
 	FastLED.addLeds<WS2812, DATA_COMET_PIN, GRB>(leds_comet, NUM_COMET_LEDS);
-    
-	Serial.begin(115200);
+  
 	for(uint8_t i = 0; i < NUM_LEDS; i++) {
 		sawValues[i] = random8();
 	    sin5[i] = random8(0,5); 
@@ -289,7 +288,6 @@ void loop() {
 					switchOff = 1;    
 					break;
 				case 6917: //M+
-          Serial.println("M+");
 					if(level1 <= colorCount)
 						level1 = colorCount + 1;
 					else 
